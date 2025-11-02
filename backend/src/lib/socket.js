@@ -1,6 +1,7 @@
 import { prisma } from "./prisma.js";
 
 const userSocketMap = {};
+const connectionAttempts = new Map();
 
 export const initializeSocket = (io) => {
     io.on("connection", (socket) => {
