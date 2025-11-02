@@ -17,7 +17,8 @@ export const createStory = async (req, res) => {
                 ownerId: userId,
                 content,
                 mediaUrl,
-                mediaType
+                mediaType,
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
             },
             include: {
                 owner: {
@@ -40,7 +41,8 @@ export const getStories = async (req, res) => {
         
         const stories = await prisma.story.findMany({
             where: {
-                ownerId: { in: [...contactIds, userId] }
+                ownerId: { in: [...contactIds, userId] },
+                expiresAt: { gt: new Date() }
             },
             include: {
                 owner: {

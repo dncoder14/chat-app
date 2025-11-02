@@ -49,13 +49,26 @@ server.listen(PORT, async () => {
     }
 });
 
+// Error handling to prevent crashes
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    // Don't exit, just log the error
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Don't exit, just log the error
+});
+
 // Graceful shutdown
 process.on('SIGINT', async () => {
+    console.log('Received SIGINT, shutting down gracefully...');
     await prisma.$disconnect();
     process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
+    console.log('Received SIGTERM, shutting down gracefully...');
     await prisma.$disconnect();
     process.exit(0);
 });

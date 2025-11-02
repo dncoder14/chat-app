@@ -2,6 +2,7 @@ import { prisma } from "./prisma.js";
 
 const userSocketMap = {};
 const connectionAttempts = new Map();
+const HEARTBEAT_INTERVAL = 25000; // 25 seconds
 
 export const initializeSocket = (io) => {
     io.on("connection", (socket) => {
@@ -9,16 +10,31 @@ export const initializeSocket = (io) => {
         
         if (userId) {
             userSocketMap[userId] = socket.id;
-            prisma.user.update({ 
-                where: { id: userId }, 
-                data: { isOnline: true } 
-            });
+            
+            // Batch database updates to reduce load
+            setTimeout(() => {
+                prisma.user.update({ 
+                    where: { id: userId }, 
+                    data: { isOnline: true } 
+                }).catch(console.error);
+            }, 100);
             
             // Send current online users to the new connection
             socket.emit("getOnlineUsers", Object.keys(userSocketMap));
             
             // Broadcast to all users that this user is online
             socket.broadcast.emit("userOnline", userId);
+            
+            // Setup heartbeat
+            const heartbeat = setInterval(() => {
+                socket.emit('ping');
+            }, HEARTBEAT_INTERVAL);
+            
+            socket.on('pong', () => {
+                // Client is alive
+            });
+            
+            socket.heartbeat = heartbeat;
         }
 
         socket.on("typing", ({ receiverId, isTyping }) => {
@@ -49,13 +65,23 @@ export const initializeSocket = (io) => {
         socket.on("disconnect", () => {
             if (userId) {
                 delete userSocketMap[userId];
-                prisma.user.update({ 
-                    where: { id: userId },
-                    data: { 
-                        isOnline: false, 
-                        lastSeen: new Date() 
-                    }
-                });
+                
+                // Clear heartbeat
+                if (socket.heartbeat) {
+                    clearInterval(socket.heartbeat);
+                }
+                
+                // Batch database updates
+                setTimeout(() => {
+                    prisma.user.update({ 
+                        where: { id: userId },
+                        data: { 
+                            isOnline: false, 
+                            lastSeen: new Date() 
+                        }
+                    }).catch(console.error);
+                }, 100);
+                
                 socket.broadcast.emit("userOffline", userId);
             }
         });
