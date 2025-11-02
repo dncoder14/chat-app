@@ -18,12 +18,8 @@ const HomePage = () => {
   return (
     <div className="h-screen bg-white dark:bg-gray-900">
       <div className="flex h-full">
-        <div className="w-full md:w-80 lg:w-96">
-          <Sidebar />
-        </div>
-        <div className="flex-1 hidden md:flex">
-          {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
-        </div>
+        <Sidebar />
+        {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
       </div>
       <StoryViewer />
     </div>
