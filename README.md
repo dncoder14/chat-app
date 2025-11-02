@@ -62,7 +62,7 @@ A modern real-time chat application built with React, Node.js, Socket.io, and Mo
 **Backend:**
 - Node.js + Express
 - Socket.io
-- MongoDB + Mongoose
+- MySQL + Prisma ORM
 - JWT Authentication
 - Cloudinary (Image Upload)
 - bcryptjs (Password Hashing)
@@ -71,7 +71,7 @@ A modern real-time chat application built with React, Node.js, Socket.io, and Mo
 
 ### Prerequisites
 - Node.js (v16 or higher)
-- MongoDB (local or MongoDB Atlas)
+- MySQL (local or cloud instance)
 - Cloudinary account (for image uploads)
 
 ### Backend Setup
@@ -89,14 +89,21 @@ npm install
 3. Create `.env` file in backend directory:
 ```env
 PORT=5001
-MONGODB_URI=mongodb://localhost:27017/chatapp
+DATABASE_URL=mysql://username:password@localhost:3306/chatapp
 JWT_SECRET=your_jwt_secret_key_here
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+CLIENT_URL=http://localhost:5173
 ```
 
-4. Start the backend server:
+4. Setup database:
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
+
+5. Start the backend server:
 ```bash
 npm run dev
 ```
