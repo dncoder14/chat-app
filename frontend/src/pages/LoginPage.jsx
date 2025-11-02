@@ -9,12 +9,18 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const { login, isLoggingIn } = useAuthStore();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(formData);
+    setIsLoading(true);
+    try {
+      await login(formData);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
