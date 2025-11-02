@@ -160,6 +160,15 @@ export const sendMessage = async (req, res) => {
         const { id: receiverId } = req.params;
         const senderId = req.user.id;
 
+        // Validate message content
+        if (!text && !image) {
+            return res.status(400).json({ error: "Message content is required" });
+        }
+        
+        if (text && text.length > 1000) {
+            return res.status(400).json({ error: "Message too long" });
+        }
+
         // Check if sender is blocked by receiver or sender has blocked receiver
         const [receiver, sender] = await Promise.all([
             prisma.user.findUnique({ where: { id: receiverId } }),
