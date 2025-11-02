@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: chat-app-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: chat-app-db
+          property: connectionString

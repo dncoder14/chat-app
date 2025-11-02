@@ -38,7 +38,7 @@ app.use("/api/notifications", notificationRoutes);
 
 initializeSocket(io);
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 10000;
 server.listen(PORT, async () => {
     console.log("Server is listening at PORT:" + PORT);
     try {
