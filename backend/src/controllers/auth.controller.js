@@ -20,6 +20,12 @@ export const signup = async (req, res) => {
             return res.status(400).json({ message: "Invalid email format" });
         }
 
+        // Phone validation
+        const phoneRegex = /^[+]?[1-9]\d{1,14}$/;
+        if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+            return res.status(400).json({ message: "Invalid phone number format" });
+        }
+
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [{ email }, { phone }]
