@@ -3,7 +3,12 @@ import { prisma } from "../lib/prisma.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
-    const token = req.cookies.jwt;
+    // Try to get token from cookies first, then from Authorization header
+    let token = req.cookies.jwt;
+    
+    if (!token && req.headers.authorization) {
+      token = req.headers.authorization.split(' ')[1]; // Bearer TOKEN
+    }
 
     if (!token) {
       return res.status(401).json({ message: "Unauthorized - No Token Provided" });

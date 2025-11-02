@@ -47,12 +47,15 @@ export const signup = async (req, res) => {
 
         generateToken(newUser.id, res);
 
+        const token = generateToken(newUser.id, res);
+        
         res.status(201).json({
             _id: newUser.id,
             fullName: newUser.fullName,
             email: newUser.email,
             phone: newUser.phone,
-            profilePic: newUser.profilePic
+            profilePic: newUser.profilePic,
+            token
         });
     } catch (error) {
         console.log("Error in signup controller", error.message);
@@ -77,14 +80,15 @@ export const login = async (req, res) => {
             where: { id: user.id },
             data: { isOnline: true }
         });
-        generateToken(user.id, res);
+        const token = generateToken(user.id, res);
 
         res.status(200).json({
             _id: user.id,
             fullName: user.fullName,
             email: user.email,
             phone: user.phone,
-            profilePic: user.profilePic
+            profilePic: user.profilePic,
+            token
         });
 
     } catch (error) {
