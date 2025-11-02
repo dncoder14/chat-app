@@ -1,6 +1,19 @@
 # Real-Time Chat Application
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
+[![React Version](https://img.shields.io/badge/react-%5E18.0.0-blue)](https://reactjs.org/)
+
 A modern real-time chat application built with React, Node.js, Socket.io, and MongoDB featuring stories, contact management, and dark/light themes.
+
+## 📋 Table of Contents
+- [Features](#-features)
+- [Tech Stack](#️-tech-stack)
+- [Installation](#-installation--setup)
+- [Usage](#-usage)
+- [API Documentation](#-api-endpoints)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ## ✨ Features
 
@@ -220,6 +233,37 @@ chat-app/
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📚 Documentation
+
+- [Environment Setup](ENV_SETUP.md)
+- [Deployment Guide](DEPLOYMENT.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
+- [Feature List](FEATURES.md)
+
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Socket.io for real-time communication
+- Cloudinary for image management
+- MongoDB for database solutions
+- React and Node.js communities
+
+## 📞 Support
+
+If you have any questions or need help, please:
+- Open an issue on GitHub
+- Check the documentation
+- Review existing issues and discussions
