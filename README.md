@@ -6,50 +6,50 @@
 
 A modern real-time chat application built with React, Node.js, Socket.io, and MongoDB featuring stories, contact management, and dark/light themes.
 
-## 📋 Table of Contents
-- [Features](#-features)
-- [Tech Stack](#️-tech-stack)
-- [Installation](#-installation--setup)
-- [Usage](#-usage)
-- [API Documentation](#-api-endpoints)
-- [Contributing](#-contributing)
-- [License](#-license)
+## Table of Contents
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Installation](#installation--setup)
+- [Usage](#usage)
+- [API Documentation](#api-endpoints)
+- [Contributing](#contributing)
+- [License](#license)
 
-## ✨ Features
+## Features
 
 ### Core Chat Features
-- ✅ Real-time messaging using Socket.io
-- ✅ Typing indicator (show "typing..." when other user types)
-- ✅ Online status indicator for contacts
-- ✅ Messages show sender + timestamp
-- ✅ Smooth UI + animations
+- Real-time messaging using Socket.io
+- Typing indicator (show "typing..." when other user types)
+- Online status indicator for contacts
+- Messages show sender + timestamp
+- Smooth UI + animations
 
 ### UI / Theme Features
-- ✅ Light mode & dark mode toggle
-- ✅ Orange + White theme colors (clean modern chat UI)
-- ✅ Loading skeleton animation while data loads
-- ✅ Responsive UI (desktop & mobile)
-- ✅ Sidebar (contacts + stories)
-- ✅ Main chat window + message input
-- ✅ Story viewer component
+- Light mode & dark mode toggle
+- Orange + White theme colors (clean modern chat UI)
+- Loading skeleton animation while data loads
+- Responsive UI (desktop & mobile)
+- Sidebar (contacts + stories)
+- Main chat window + message input
+- Story viewer component
 
 ### User Features
-- ✅ Add contacts using phone number lookup
-- ✅ Block/unblock users option
-- ✅ Story posting (image/text)
-- ✅ Stories expire in 24 hours
-- ✅ User authentication (JWT)
+- Add contacts using phone number lookup
+- Block/unblock users option
+- Story posting (image/text)
+- Stories expire in 24 hours
+- User authentication (JWT)
 
 ### App Pages / Components
-- ✅ Login / Register
-- ✅ Home (Chats List + Stories)
-- ✅ Chat Screen
-- ✅ Settings Page (Theme toggle, Blocked users list)
-- ✅ Profile edit
-- ✅ Story upload page
-- ✅ Story viewer modal
+- Login / Register
+- Home (Chats List + Stories)
+- Chat Screen
+- Settings Page (Theme toggle, Blocked users list)
+- Profile edit
+- Story upload page
+- Story viewer modal
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 **Frontend:**
 - React 18 + Vite
@@ -67,7 +67,7 @@ A modern real-time chat application built with React, Node.js, Socket.io, and Mo
 - Cloudinary (Image Upload)
 - bcryptjs (Password Hashing)
 
-## 📦 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 - Node.js (v16 or higher)
@@ -129,7 +129,7 @@ The application will be available at:
 - Frontend: http://localhost:5173
 - Backend: http://localhost:5001
 
-## 🚀 Usage
+## Usage
 
 1. **Register/Login**: Create an account or login with existing credentials
 2. **Add Contacts**: Use the "+" button to add contacts by phone number
@@ -139,7 +139,7 @@ The application will be available at:
 6. **Settings**: Access theme toggle and blocked users management
 7. **Profile**: Update your profile picture and view account info
 
-## 📱 Features in Detail
+## Features in Detail
 
 ### Real-time Messaging
 - Instant message delivery using Socket.io
@@ -165,7 +165,7 @@ The application will be available at:
 - Smooth transitions between themes
 - Persistent theme preference
 
-## 🔧 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/signup` - Register new user
@@ -191,7 +191,7 @@ The application will be available at:
 - `GET /api/stories` - Get all stories
 - `DELETE /api/stories/:storyId` - Delete story
 
-## 🔌 Socket Events
+## Socket Events
 
 ### Client to Server
 - `typing` - User typing status
@@ -206,7 +206,7 @@ The application will be available at:
 - `userOffline` - User went offline
 - `newStory` - New story created
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 chat-app/
@@ -232,15 +232,7 @@ chat-app/
 └── README.md
 ```
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
@@ -250,25 +242,25 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📚 Documentation
+## Documentation
 
 - [Environment Setup](ENV_SETUP.md)
 - [Deployment Guide](DEPLOYMENT.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Feature List](FEATURES.md)
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Socket.io for real-time communication
 - Cloudinary for image management
 - MongoDB for database solutions
 - React and Node.js communities
 
-## 📞 Support
+## Support
 
 If you have any questions or need help, please:
 - Open an issue on GitHub
