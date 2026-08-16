@@ -5,13 +5,13 @@ const MessageStatus = ({ message, authUser }) => {
   if ((message.senderId._id || message.senderId.id || message.senderId) !== (authUser._id || authUser.id)) return null;
 
   return (
-    <div className="flex items-center space-x-1 ml-2">
+    <div className="flex items-center">
       {message.isRead ? (
-        <CheckCheck className="w-4 h-4 text-blue-500" />
+        <CheckCheck className="w-3.5 h-3.5 text-sky-200" />
       ) : message.isDelivered ? (
-        <Check className="w-4 h-4 text-gray-400" />
+        <Check className="w-3.5 h-3.5 text-white/70" />
       ) : (
-        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+        <div className="w-1.5 h-1.5 bg-white/70 rounded-full" />
       )}
     </div>
   );

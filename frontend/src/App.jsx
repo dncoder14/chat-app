@@ -19,39 +19,46 @@ function App() {
   }, [checkAuth])
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+
+    const applyTheme = () => {
+      const resolved = theme === 'system' ? (media.matches ? 'dark' : 'light') : theme
+      document.documentElement.classList.toggle('dark', resolved === 'dark')
+      document.documentElement.setAttribute('data-theme', resolved)
+    }
+
+    applyTheme()
+
+    if (theme === 'system') {
+      media.addEventListener('change', applyTheme)
+      return () => media.removeEventListener('change', applyTheme)
     }
   }, [theme])
 
   if (isCheckingAuth && !authUser) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900">
+      <div className="flex items-center justify-center h-screen bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted text-sm">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className={theme}>
-      <Router>
-        <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-          <Routes>
-            <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
-            <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
-            <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
-            <Route path="/settings" element={authUser ? <SettingsPage /> : <Navigate to="/login" />} />
-            <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
-          </Routes>
-          <Toaster />
-        </div>
-      </Router>
-    </div>
+    <Router>
+      <div className="min-h-screen bg-background text-foreground">
+        <Routes>
+          <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
+          <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
+          <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+          <Route path="/settings" element={authUser ? <SettingsPage /> : <Navigate to="/login" />} />
+          <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
+        </Routes>
+        <Toaster />
+      </div>
+    </Router>
   )
 }
 

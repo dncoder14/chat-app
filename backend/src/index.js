@@ -38,12 +38,29 @@ app.use("/api/notifications", notificationRoutes);
 
 initializeSocket(io);
 
+const STORY_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
+
+const cleanupExpiredStories = async () => {
+    try {
+        const { count } = await prisma.story.deleteMany({
+            where: { expiresAt: { lt: new Date() } }
+        });
+        if (count > 0) {
+            console.log(`Cleaned up ${count} expired stor${count === 1 ? "y" : "ies"}`);
+        }
+    } catch (error) {
+        console.error("Error cleaning up expired stories:", error);
+    }
+};
+
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, async () => {
     console.log("Server is listening at PORT:" + PORT);
     try {
         await prisma.$connect();
         console.log("Database connected successfully");
+        cleanupExpiredStories();
+        setInterval(cleanupExpiredStories, STORY_CLEANUP_INTERVAL);
     } catch (error) {
         console.error("Database connection failed:", error);
     }

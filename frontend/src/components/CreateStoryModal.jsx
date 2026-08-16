@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
-import { X, Image, Type } from "lucide-react";
+import { Image as ImageIcon, Type } from "lucide-react";
 import { useStoryStore } from "../store/useStoryStore";
 import toast from "react-hot-toast";
+import Modal from "./ui/Modal";
 
 const CreateStoryModal = ({ onClose }) => {
   const [content, setContent] = useState("");
@@ -43,92 +44,86 @@ const CreateStoryModal = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create Story</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Modal onClose={onClose} title="Create Story">
+      <div className="flex gap-2 mb-4">
+        <button
+          type="button"
+          onClick={() => setMediaType("text")}
+          className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
+            mediaType === "text"
+              ? "bg-primary text-white"
+              : "bg-surface-secondary text-muted hover:text-foreground"
+          }`}
+        >
+          <Type className="w-4 h-4" />
+          <span>Text</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
+            mediaType === "image"
+              ? "bg-primary text-white"
+              : "bg-surface-secondary text-muted hover:text-foreground"
+          }`}
+        >
+          <ImageIcon className="w-4 h-4" />
+          <span>Image</span>
+        </button>
+      </div>
 
-        <div className="flex space-x-2 mb-4">
-          <button
-            onClick={() => setMediaType("text")}
-            className={`flex-1 p-2 rounded-lg flex items-center justify-center space-x-2 ${
-              mediaType === "text"
-                ? "bg-primary-500 text-white"
-                : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            <Type className="w-4 h-4" />
-            <span>Text</span>
-          </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className={`flex-1 p-2 rounded-lg flex items-center justify-center space-x-2 ${
-              mediaType === "image"
-                ? "bg-primary-500 text-white"
-                : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            <Image className="w-4 h-4" />
-            <span>Image</span>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          {imagePreview && (
-            <div className="mb-4">
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-full h-48 object-cover rounded-lg"
-              />
-            </div>
-          )}
-
+      <form onSubmit={handleSubmit}>
+        {imagePreview && (
           <div className="mb-4">
-            <textarea
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-              placeholder={mediaType === "image" ? "Add a caption..." : "What's on your mind?"}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={4}
-              required
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="w-full h-48 object-cover rounded-lg"
             />
           </div>
+        )}
 
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleImageChange}
+        <div className="mb-5">
+          <label htmlFor="story-content" className="sr-only">
+            Story content
+          </label>
+          <textarea
+            id="story-content"
+            className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-background text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors resize-none"
+            placeholder={mediaType === "image" ? "Add a caption..." : "What's on your mind?"}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={4}
+            required
           />
+        </div>
 
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isCreatingStory || !content.trim()}
-              className="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isCreatingStory ? "Creating..." : "Create Story"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleImageChange}
+        />
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 text-sm font-medium text-foreground bg-surface-secondary rounded-lg hover:bg-border transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isCreatingStory || !content.trim()}
+            className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isCreatingStory ? "Creating..." : "Create Story"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 

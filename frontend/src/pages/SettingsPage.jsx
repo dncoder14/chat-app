@@ -1,17 +1,26 @@
 import { useState, useEffect } from "react";
 import { useThemeStore } from "../store/useThemeStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { ArrowLeft, Moon, Sun, Shield, User, Camera, Trash2 } from "lucide-react";
+import { ArrowLeft, Sun, Moon, Monitor, Shield, User, Camera, Trash2, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import Avatar from "../components/Avatar";
+import SettingsSection from "../components/ui/SettingsSection";
+import SettingsRow from "../components/ui/SettingsRow";
+import EmptyState from "../components/ui/EmptyState";
+
+const THEME_OPTIONS = [
+  { key: "light", label: "Light", icon: Sun },
+  { key: "dark", label: "Dark", icon: Moon },
+  { key: "system", label: "System", icon: Monitor },
+];
 
 const SettingsPage = () => {
   const { theme, setTheme } = useThemeStore();
   const { authUser, updateProfile, isUpdatingProfile } = useAuthStore();
   const [blockedUsers, setBlockedUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [unblockingId, setUnblockingId] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
 
   useEffect(() => {
@@ -28,15 +37,15 @@ const SettingsPage = () => {
   };
 
   const unblockUser = async (userId) => {
-    setIsLoading(true);
+    setUnblockingId(userId);
     try {
       await axiosInstance.post(`/contacts/unblock/${userId}`);
-      setBlockedUsers(blockedUsers.filter(user => user._id !== userId));
+      setBlockedUsers(blockedUsers.filter((user) => (user._id || user.id) !== userId));
       toast.success("User unblocked successfully");
     } catch (error) {
       toast.error("Failed to unblock user");
     } finally {
-      setIsLoading(false);
+      setUnblockingId(null);
     }
   };
 
@@ -64,29 +73,33 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Link to="/" className="mr-4">
-            <ArrowLeft className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+        <div className="flex items-center gap-3 mb-6">
+          <Link
+            to="/"
+            aria-label="Back"
+            className="p-2 -ml-2 rounded-md text-muted hover:text-foreground hover:bg-surface-secondary transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <h1 className="text-xl font-bold text-foreground">Settings</h1>
         </div>
 
         <div className="space-y-6">
           {/* Profile Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+          <div className="bg-surface rounded-lg border border-border shadow-sm p-6">
             <div className="flex flex-col items-center">
               <div className="relative mb-4">
-                <Avatar 
-                  src={selectedImg || authUser.profilePic} 
-                  name={authUser.fullName} 
+                <Avatar
+                  src={selectedImg || authUser.profilePic}
+                  name={authUser.fullName}
                   size="w-24 h-24"
-                  className="border-4 border-primary-500"
+                  className="border-4 border-primary-soft"
                 />
                 <label
                   htmlFor="avatar-upload"
-                  className={`absolute bottom-0 right-0 bg-primary-500 hover:bg-primary-600 p-2 rounded-full cursor-pointer transition-all duration-200 ${
+                  className={`absolute bottom-0 right-0 bg-primary hover:bg-primary-hover p-2 rounded-full cursor-pointer transition-colors ${
                     isUpdatingProfile ? "animate-pulse pointer-events-none" : ""
                   }`}
                 >
@@ -101,15 +114,15 @@ const SettingsPage = () => {
                   />
                 </label>
               </div>
-              
-              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{authUser?.fullName}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{authUser?.email}</p>
-              
-              <div className="flex space-x-3">
+
+              <h3 className="font-semibold text-foreground text-lg">{authUser?.fullName}</h3>
+              <p className="text-sm text-muted mb-4">{authUser?.email}</p>
+
+              <div className="flex gap-3">
                 {authUser?.profilePic && (
                   <button
                     onClick={removeProfilePic}
-                    className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition duration-200"
+                    className="flex items-center gap-2 text-sm bg-danger/10 text-danger hover:bg-danger/20 px-3 py-2 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>Remove</span>
@@ -117,86 +130,81 @@ const SettingsPage = () => {
                 )}
                 <Link
                   to="/profile"
-                  className="flex items-center space-x-2 bg-primary-500 hover:bg-primary-600 text-white px-3 py-2 rounded-lg transition duration-200"
+                  className="flex items-center gap-2 text-sm bg-primary hover:bg-primary-hover text-white px-3 py-2 rounded-lg transition-colors"
                 >
                   <User className="w-4 h-4" />
                   <span>Edit Profile</span>
                 </Link>
               </div>
-              
+
               {isUpdatingProfile && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Updating...</p>
+                <p className="text-xs text-muted mt-2">Updating...</p>
               )}
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                {theme === "light" ? (
-                  <Sun className="w-5 h-5 text-yellow-500 mr-3" />
-                ) : (
-                  <Moon className="w-5 h-5 text-blue-500 mr-3" />
-                )}
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Theme</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Choose your preferred theme
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition duration-200"
-              >
-                {theme === "light" ? "Dark" : "Light"}
-              </button>
-            </div>
-          </div>
-
-
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-            <div className="flex items-center mb-4">
-              <Shield className="w-5 h-5 text-red-500 mr-3" />
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Blocked Users</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Manage blocked contacts
-                </p>
+          <SettingsSection title="Appearance">
+            <div className="px-5 py-4">
+              <p className="text-sm font-medium text-foreground mb-0.5">Theme</p>
+              <p className="text-xs text-muted mb-3">Choose your preferred appearance</p>
+              <div className="grid grid-cols-3 gap-2">
+                {THEME_OPTIONS.map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setTheme(key)}
+                    className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg text-xs font-medium border transition-colors ${
+                      theme === key
+                        ? "border-primary bg-primary-soft text-primary"
+                        : "border-border text-muted hover:text-foreground hover:bg-surface-secondary"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
-            
+          </SettingsSection>
+
+          <SettingsSection title="Blocked Users">
             {blockedUsers.length === 0 ? (
-              <p className="text-gray-600 dark:text-gray-400">No blocked users</p>
+              <EmptyState
+                icon={Shield}
+                title="No blocked users"
+                description="Users you block will appear here"
+              />
             ) : (
-              <div className="space-y-3">
-                {blockedUsers.map((user) => (
-                  <div key={user._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex items-center">
-                      <Avatar 
-                        src={user.profilePic} 
-                        name={user.fullName} 
-                        size="w-10 h-10"
-                        className="mr-3"
-                      />
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">{user.fullName}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{user.phone}</p>
+              blockedUsers.map((user) => {
+                const userId = user._id || user.id;
+                return (
+                  <div key={userId} className="flex items-center justify-between px-5 py-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar src={user.profilePic} name={user.fullName} size="w-10 h-10" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{user.fullName}</p>
+                        <p className="text-xs text-muted truncate">{user.phone}</p>
                       </div>
                     </div>
                     <button
-                      onClick={() => unblockUser(user._id)}
-                      disabled={isLoading}
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition duration-200 disabled:opacity-50"
+                      onClick={() => unblockUser(userId)}
+                      disabled={unblockingId === userId}
+                      className="text-xs font-medium text-success bg-success/10 hover:bg-success/20 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 shrink-0"
                     >
-                      Unblock
+                      {unblockingId === userId ? "Unblocking..." : "Unblock"}
                     </button>
                   </div>
-                ))}
-              </div>
+                );
+              })
             )}
-          </div>
+          </SettingsSection>
+
+          <SettingsSection>
+            <SettingsRow
+              icon={Info}
+              title="About Orango"
+              description="Version 1.0.0"
+            />
+          </SettingsSection>
         </div>
       </div>
     </div>

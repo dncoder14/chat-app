@@ -38,7 +38,7 @@ export const useStoryStore = create((set, get) => ({
   deleteStory: async (storyId) => {
     try {
       await axiosInstance.delete(`/stories/${storyId}`);
-      set({ stories: get().stories.filter(story => story._id !== storyId) });
+      set({ stories: get().stories.filter(story => (story._id || story.id) !== storyId) });
       toast.success("Story deleted successfully");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete story");

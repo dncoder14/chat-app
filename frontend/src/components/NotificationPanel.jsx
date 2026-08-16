@@ -26,7 +26,7 @@ const NotificationPanel = () => {
     try {
       await axiosInstance.put(`/notifications/${notificationId}/read`);
       setNotifications(notifications.map(n => 
-        n._id === notificationId ? { ...n, isRead: true } : n
+        (n._id || n.id) === notificationId ? { ...n, isRead: true } : n
       ));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
@@ -70,8 +70,8 @@ const NotificationPanel = () => {
             ) : (
               notifications.map((notification) => (
                 <div
-                  key={notification._id}
-                  onClick={() => !notification.isRead && markAsRead(notification._id)}
+                  key={notification._id || notification.id}
+                  onClick={() => !notification.isRead && markAsRead(notification._id || notification.id)}
                   className={`p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
                     !notification.isRead ? "bg-primary-50 dark:bg-primary-900/20" : ""
                   }`}

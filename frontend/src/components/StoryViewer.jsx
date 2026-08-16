@@ -9,12 +9,23 @@ const StoryViewer = () => {
 
   useEffect(() => {
     if (selectedStory) {
-      const ownerStories = stories.filter(story => story.owner._id === selectedStory.owner._id);
+      const selectedOwnerId = selectedStory.owner._id || selectedStory.owner.id;
+      const selectedStoryId = selectedStory._id || selectedStory.id;
+      const ownerStories = stories.filter(story => (story.owner._id || story.owner.id) === selectedOwnerId);
       setUserStories(ownerStories);
-      const index = ownerStories.findIndex(story => story._id === selectedStory._id);
+      const index = ownerStories.findIndex(story => (story._id || story.id) === selectedStoryId);
       setCurrentIndex(index);
     }
   }, [selectedStory, stories]);
+
+  useEffect(() => {
+    if (!selectedStory) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSelectedStory(null);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectedStory, setSelectedStory]);
 
   if (!selectedStory) return null;
 
@@ -37,7 +48,12 @@ const StoryViewer = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+    <div
+      className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${currentStory.owner.fullName}'s story`}
+    >
       <div className="relative w-full max-w-md h-full bg-black">
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
           <div className="flex items-center space-x-3">
@@ -55,7 +71,8 @@ const StoryViewer = () => {
           </div>
           <button
             onClick={() => setSelectedStory(null)}
-            className="text-white hover:text-gray-300"
+            aria-label="Close story"
+            className="text-white hover:text-gray-300 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -80,7 +97,8 @@ const StoryViewer = () => {
             {currentIndex > 0 && (
               <button
                 onClick={prevStory}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
+                aria-label="Previous story"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors"
               >
                 <ChevronLeft className="w-8 h-8" />
               </button>
@@ -88,7 +106,8 @@ const StoryViewer = () => {
             {currentIndex < userStories.length - 1 && (
               <button
                 onClick={nextStory}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
+                aria-label="Next story"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors"
               >
                 <ChevronRight className="w-8 h-8" />
               </button>

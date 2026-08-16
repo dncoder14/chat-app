@@ -22,14 +22,14 @@ const ChatContainer = () => {
   const { authUser } = useAuthStore();
   const { isUserBlocked } = useBlockStore();
   const messageEndRef = useRef(null);
-  
+
   const isBlocked = isUserBlocked(selectedUser._id || selectedUser.id);
 
   useEffect(() => {
     const userId = selectedUser._id || selectedUser.id;
     getMessages(userId);
     subscribeToMessages();
-    
+
     // Mark messages as read when opening chat
     const markAsRead = async () => {
       try {
@@ -38,7 +38,7 @@ const ChatContainer = () => {
         console.error("Error marking messages as read:", error);
       }
     };
-    
+
     markAsRead();
 
     return () => unsubscribeFromMessages();
@@ -51,7 +51,7 @@ const ChatContainer = () => {
         container.scrollTop = container.scrollHeight;
       }
     };
-    
+
     // Multiple scroll attempts to ensure it works
     scrollToBottom();
     setTimeout(scrollToBottom, 50);
@@ -62,15 +62,15 @@ const ChatContainer = () => {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
         <ChatHeader />
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
-              <div className="skeleton h-12 w-48 rounded-lg"></div>
+              <div className="skeleton h-12 w-48 rounded-2xl"></div>
             </div>
           ))}
         </div>
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="skeleton h-12 w-full rounded-lg"></div>
+        <div className="px-4 sm:px-6 py-4 border-t border-border">
+          <div className="skeleton h-12 w-full max-w-3xl mx-auto rounded-2xl"></div>
         </div>
       </div>
     );
@@ -79,21 +79,21 @@ const ChatContainer = () => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <ChatHeader />
-      
-      <MessageList 
-        messages={messages} 
-        authUser={authUser} 
+
+      <MessageList
+        messages={messages}
+        authUser={authUser}
         selectedUser={selectedUser}
       />
-      
+
       <div ref={messageEndRef} />
-      
+
       {!isBlocked ? (
         <MessageInput />
       ) : (
-        <div className="p-4 bg-gray-100 dark:bg-gray-800 text-center border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-center space-x-2 text-gray-600 dark:text-gray-400">
-            <Shield className="w-5 h-5" />
+        <div className="px-4 py-3.5 bg-surface-secondary text-center border-t border-border">
+          <div className="flex items-center justify-center gap-2 text-muted text-sm">
+            <Shield className="w-4 h-4 shrink-0" />
             <p>You have blocked this user. Unblock from the menu above to send messages.</p>
           </div>
         </div>

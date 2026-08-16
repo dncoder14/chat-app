@@ -4,7 +4,7 @@ const StoryList = ({ stories }) => {
   const { setSelectedStory } = useStoryStore();
 
   const groupedStories = stories.reduce((acc, story) => {
-    const ownerId = story.owner._id;
+    const ownerId = story.owner._id || story.owner.id;
     if (!acc[ownerId]) {
       acc[ownerId] = {
         owner: story.owner,
@@ -19,21 +19,22 @@ const StoryList = ({ stories }) => {
     <div className="flex space-x-3 overflow-x-auto pb-2">
       {Object.values(groupedStories).map(({ owner, stories }) => (
         <button
-          key={owner._id}
+          key={owner._id || owner.id}
           onClick={() => setSelectedStory(stories[0])}
+          aria-label={`View ${owner.fullName}'s story`}
           className="flex-shrink-0 text-center"
         >
           <div className="relative">
             <img
               src={owner.profilePic || "/avatar.png"}
               alt={owner.fullName}
-              className="w-16 h-16 rounded-full object-cover border-2 border-primary-500 p-0.5"
+              className="w-16 h-16 rounded-full object-cover border-2 border-primary p-0.5"
             />
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center font-bold">
               {stories.length}
             </div>
           </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate w-16">
+          <p className="text-xs text-muted mt-1 truncate w-16">
             {owner.fullName.split(' ')[0]}
           </p>
         </button>

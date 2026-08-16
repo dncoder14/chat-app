@@ -21,9 +21,9 @@ export const signup = async (req, res) => {
         }
 
         // Phone validation
-        const phoneRegex = /^[+]?[1-9]\d{1,14}$/;
-        if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-            return res.status(400).json({ message: "Invalid phone number format" });
+        const cleanPhone = phone.replace(/\s/g, '');
+        if (cleanPhone.length !== 10 || !/^[0-9]{10}$/.test(cleanPhone)) {
+            return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
         }
 
         const existingUser = await prisma.user.findFirst({
@@ -45,10 +45,8 @@ export const signup = async (req, res) => {
             }
         });
 
-        generateToken(newUser.id, res);
-
         const token = generateToken(newUser.id, res);
-        
+
         res.status(201).json({
             _id: newUser.id,
             fullName: newUser.fullName,
@@ -64,15 +62,15 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, remember } = req.body;
     try {
         if (!email || !password) {
             return res.status(400).json({ message: "All fields are required" });
         }
-        
+
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return res.status(400).json({ message: "Invalid credentials" });
-        
+
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) return res.status(400).json({ message: "Invalid credentials" });
 
@@ -80,7 +78,7 @@ export const login = async (req, res) => {
             where: { id: user.id },
             data: { isOnline: true }
         });
-        const token = generateToken(user.id, res);
+        const token = generateToken(user.id, res, remember !== false);
 
         res.status(200).json({
             _id: user.id,

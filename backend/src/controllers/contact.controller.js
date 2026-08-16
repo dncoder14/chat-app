@@ -17,17 +17,18 @@ export const addContact = async (req, res) => {
             return res.status(400).json({ message: "Cannot add yourself" });
         }
 
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        const currentContacts = Array.isArray(user.contacts) ? user.contacts : [];
-        
-        if (currentContacts.includes(contact.id)) {
+        // Atomic jsonb append guarded by a containment check, so two concurrent
+        // requests can't race and clobber each other's write (lost update).
+        const [updated] = await prisma.$queryRaw`
+            UPDATE users
+            SET contacts = contacts || to_jsonb(${contact.id}::text)
+            WHERE id = ${userId} AND NOT (contacts @> to_jsonb(${contact.id}::text))
+            RETURNING id
+        `;
+
+        if (!updated) {
             return res.status(400).json({ message: "Contact already added" });
         }
-
-        await prisma.user.update({
-            where: { id: userId },
-            data: { contacts: [...currentContacts, contact.id] }
-        });
 
         res.status(200).json({ message: "Contact added successfully", contact });
     } catch (error) {
@@ -55,15 +56,13 @@ export const blockUser = async (req, res) => {
         const { userId: targetUserId } = req.params;
         const userId = req.user.id;
 
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        const currentBlocked = Array.isArray(user.blockedUsers) ? user.blockedUsers : [];
-        
-        if (!currentBlocked.includes(targetUserId)) {
-            await prisma.user.update({
-                where: { id: userId },
-                data: { blockedUsers: [...currentBlocked, targetUserId] }
-            });
-        }
+        // Atomic jsonb append guarded by a containment check, avoids the
+        // read-modify-write race the previous implementation had.
+        await prisma.$executeRaw`
+            UPDATE users
+            SET "blockedUsers" = "blockedUsers" || to_jsonb(${targetUserId}::text)
+            WHERE id = ${userId} AND NOT ("blockedUsers" @> to_jsonb(${targetUserId}::text))
+        `;
 
         res.status(200).json({ message: "User blocked successfully" });
     } catch (error) {
@@ -76,13 +75,16 @@ export const unblockUser = async (req, res) => {
         const { userId: targetUserId } = req.params;
         const userId = req.user.id;
 
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        const currentBlocked = Array.isArray(user.blockedUsers) ? user.blockedUsers : [];
-        const updatedBlockedUsers = currentBlocked.filter(id => id !== targetUserId);
-        await prisma.user.update({
-            where: { id: userId },
-            data: { blockedUsers: updatedBlockedUsers }
-        });
+        // Atomic jsonb element removal, avoids the read-modify-write race
+        // the previous implementation had.
+        await prisma.$executeRaw`
+            UPDATE users
+            SET "blockedUsers" = COALESCE(
+                (SELECT jsonb_agg(elem) FROM jsonb_array_elements("blockedUsers") elem WHERE elem <> to_jsonb(${targetUserId}::text)),
+                '[]'::jsonb
+            )
+            WHERE id = ${userId}
+        `;
 
         res.status(200).json({ message: "User unblocked successfully" });
     } catch (error) {

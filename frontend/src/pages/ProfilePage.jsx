@@ -21,26 +21,30 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Link to="/settings" className="mr-4">
-            <ArrowLeft className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+        <div className="flex items-center gap-3 mb-6">
+          <Link
+            to="/settings"
+            aria-label="Back to settings"
+            className="p-2 -ml-2 rounded-md text-muted hover:text-foreground hover:bg-surface-secondary transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
+          <h1 className="text-xl font-bold text-foreground">Profile</h1>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-sm">
+        <div className="bg-surface rounded-lg border border-border shadow-sm p-8">
           <div className="flex flex-col items-center">
             <div className="relative">
               <img
                 src={selectedImg || authUser.profilePic || "/avatar.png"}
                 alt="Profile"
-                className="w-32 h-32 rounded-full object-cover border-4 border-primary-500"
+                className="w-32 h-32 rounded-full object-cover border-4 border-primary-soft"
               />
               <label
                 htmlFor="avatar-upload"
-                className={`absolute bottom-0 right-0 bg-primary-500 hover:bg-primary-600 p-2 rounded-full cursor-pointer transition-all duration-200 ${
+                className={`absolute bottom-0 right-0 bg-primary hover:bg-primary-hover p-2 rounded-full cursor-pointer transition-colors ${
                   isUpdatingProfile ? "animate-pulse pointer-events-none" : ""
                 }`}
               >
@@ -57,44 +61,44 @@ const ProfilePage = () => {
             </div>
 
             {isUpdatingProfile && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Uploading...</p>
+              <p className="text-xs text-muted mt-2">Uploading...</p>
             )}
           </div>
 
-          <div className="mt-8 space-y-6">
+          <div className="mt-8 space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Full Name
               </label>
-              <p className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
+              <p className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border rounded-lg text-foreground text-sm">
                 {authUser?.fullName}
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Email Address
               </label>
-              <p className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
+              <p className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border rounded-lg text-foreground text-sm">
                 {authUser?.email}
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Phone Number
               </label>
-              <p className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
+              <p className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border rounded-lg text-foreground text-sm">
                 {authUser?.phone}
               </p>
             </div>
           </div>
 
-          <div className="mt-6 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-primary-800 dark:text-primary-200 mb-2">
+          <div className="mt-6 bg-primary-soft border border-primary/20 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-primary mb-1">
               Account Information
             </h3>
-            <p className="text-sm text-primary-600 dark:text-primary-300">
+            <p className="text-sm text-primary/80">
               Your profile information is used to identify you in the chat. You can update your profile picture anytime.
             </p>
           </div>
