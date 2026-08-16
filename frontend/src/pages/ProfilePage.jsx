@@ -77,15 +77,6 @@ const ProfilePage = () => {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
-                Email Address
-              </label>
-              <p className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border rounded-lg text-foreground text-sm">
-                {authUser?.email}
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Phone Number
               </label>
               <p className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border rounded-lg text-foreground text-sm">

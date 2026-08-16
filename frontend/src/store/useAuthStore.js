@@ -5,8 +5,8 @@ import { initializeSocket } from "../lib/socket.js";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
-  isSigningUp: false,
-  isLoggingIn: false,
+  isSendingOtp: false,
+  isVerifyingOtp: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
   isConnecting: false,
@@ -26,37 +26,44 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  signup: async (data) => {
-    set({ isSigningUp: true });
+  // Backend generates the OTP (no SMS vendor wired in yet) and echoes it
+  // back in dev mode so the frontend can show it directly. Returns the
+  // response data so the caller (LoginPage) can display it.
+  sendOtp: async (phone) => {
+    set({ isSendingOtp: true });
     try {
-      const res = await axiosInstance.post("/auth/signup", data);
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-      }
-      set({ authUser: res.data });
-      toast.success("Account created successfully");
-      get().connectSocket();
+      const res = await axiosInstance.post("/auth/send-otp", { phone });
+      return res.data;
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+      throw error;
     } finally {
-      set({ isSigningUp: false });
+      set({ isSendingOtp: false });
     }
   },
 
-  login: async (data) => {
-    set({ isLoggingIn: true });
+  // Verifies the OTP with the backend. Returns the response data so the
+  // caller (LoginPage) can react to `{ newUser: true }` by prompting for a
+  // full name and calling this again.
+  verifyOtp: async ({ phone, otp, fullName }) => {
+    set({ isVerifyingOtp: true });
     try {
-      const res = await axiosInstance.post("/auth/login", data);
+      const res = await axiosInstance.post("/auth/verify-otp", { phone, otp, fullName });
+      if (res.data.newUser) {
+        return res.data;
+      }
       if (res.data.token) {
         localStorage.setItem('token', res.data.token);
       }
       set({ authUser: res.data });
       toast.success("Logged in successfully");
       get().connectSocket();
+      return res.data;
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
+      toast.error(error.response?.data?.message || "Verification failed");
+      throw error;
     } finally {
-      set({ isLoggingIn: false });
+      set({ isVerifyingOtp: false });
     }
   },
 

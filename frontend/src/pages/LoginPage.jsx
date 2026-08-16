@@ -1,58 +1,92 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { Link } from "react-router-dom";
-import { Eye, EyeOff, Lock, Loader2, AlertCircle } from "lucide-react";
+import { Lock, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 import AuthShowcase from "../components/AuthShowcase";
 import AppLogo from "../components/ui/AppLogo";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const validate = ({ email, password }) => {
-  const errors = {};
-  if (!email.trim()) {
-    errors.email = "Email is required.";
-  } else if (!EMAIL_REGEX.test(email)) {
-    errors.email = "Please enter a valid email address.";
-  }
-  if (!password) {
-    errors.password = "Password is required.";
-  }
-  return errors;
-};
+// Matches the backend's resend cooldown (RESEND_COOLDOWN_MS in otpStore.js).
+const RESEND_COOLDOWN_SECONDS = 30;
 
 const LoginPage = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [step, setStep] = useState("phone"); // phone | otp | name
+  const [phone, setPhone] = useState();
+  const [otp, setOtp] = useState("");
+  const [fullName, setFullName] = useState("");
   const [errors, setErrors] = useState({});
+  const [resendIn, setResendIn] = useState(0);
 
-  const { login, isLoggingIn } = useAuthStore();
+  const { sendOtp, isSendingOtp, verifyOtp, isVerifyingOtp } = useAuthStore();
 
-  const handleChange = (field) => (e) => {
-    const { value } = e.target;
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => (prev[field] || prev.general ? { ...prev, [field]: undefined, general: undefined } : prev));
-  };
+  useEffect(() => {
+    if (step !== "otp" || resendIn === 0) return;
+    const timer = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [step, resendIn]);
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-    if (isLoggingIn) return;
-
-    const nextErrors = validate(formData);
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
+    if (isSendingOtp) return;
+    if (!phone || !isValidPhoneNumber(phone)) {
+      setErrors({ phone: "Enter a valid phone number." });
       return;
     }
-
     setErrors({});
-    await login({ ...formData, remember: rememberMe });
-
-    if (!useAuthStore.getState().authUser) {
-      setErrors({ general: "Invalid email or password. Please try again." });
+    try {
+      const data = await sendOtp(phone);
+      // No real SMS vendor wired in yet, so the backend echoes the OTP back
+      // in dev mode. Once a vendor (e.g. 2Factor) is connected, `data.otp`
+      // won't be present and this alert will simply stop firing.
+      if (data.otp) {
+        alert(`Your OTP is: ${data.otp}`);
+      }
+      setOtp("");
+      setStep("otp");
+      setResendIn(RESEND_COOLDOWN_SECONDS);
+    } catch (error) {
+      console.log("Error sending OTP:", error);
     }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (isVerifyingOtp) return;
+    if (otp.trim().length !== 6) {
+      setErrors({ otp: "Enter the 6-digit code." });
+      return;
+    }
+    setErrors({});
+    try {
+      const data = await verifyOtp({ phone, otp: otp.trim() });
+      if (data?.newUser) {
+        setStep("name");
+      }
+    } catch (error) {
+      setErrors({ otp: error.response?.data?.message || "Invalid or expired code. Please try again." });
+    }
+  };
+
+  const handleCompleteSignup = async (e) => {
+    e.preventDefault();
+    if (isVerifyingOtp) return;
+    if (!fullName.trim()) {
+      setErrors({ fullName: "Full name is required." });
+      return;
+    }
+    setErrors({});
+    try {
+      await verifyOtp({ phone, otp: otp.trim(), fullName: fullName.trim() });
+    } catch (error) {
+      console.log("Error completing signup:", error);
+    }
+  };
+
+  const backToPhoneStep = () => {
+    setStep("phone");
+    setOtp("");
+    setErrors({});
+    setResendIn(0);
   };
 
   return (
@@ -75,105 +109,150 @@ const LoginPage = () => {
           </div>
 
           <div className="bg-surface rounded-2xl shadow-sm border border-border p-6 sm:p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
-              <p className="text-sm text-muted mt-1">Sign in to your smart chat experience</p>
-            </div>
-
-            <form onSubmit={handleSubmit} noValidate className="space-y-5">
-              {errors.general && (
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-danger/10 text-danger text-sm">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{errors.general}</span>
+            {step === "phone" && (
+              <>
+                <div className="text-center mb-8">
+                  <h1 className="text-2xl font-bold text-foreground">Welcome</h1>
+                  <p className="text-sm text-muted mt-1">Sign in with your phone number</p>
                 </div>
-              )}
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg bg-background text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
-                    errors.email ? "border-danger focus:ring-danger" : "border-border focus:ring-primary"
-                  }`}
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange("email")}
-                  aria-invalid={Boolean(errors.email)}
-                  aria-describedby={errors.email ? "email-error" : undefined}
-                />
-                {errors.email && (
-                  <p id="email-error" className="mt-1.5 text-xs text-danger">
-                    {errors.email}
-                  </p>
-                )}
-              </div>
+                <form onSubmit={handleSendOtp} noValidate className="space-y-5">
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1.5">
+                      Phone Number
+                    </label>
+                    <PhoneInput
+                      id="phone"
+                      international
+                      defaultCountry="IN"
+                      value={phone}
+                      onChange={setPhone}
+                      placeholder="Enter your phone number"
+                      className={`phone-input-field ${errors.phone ? "phone-input-error" : ""}`}
+                    />
+                    {errors.phone && (
+                      <p className="mt-1.5 text-xs text-danger">{errors.phone}</p>
+                    )}
+                  </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    className={`w-full px-3.5 py-2.5 pr-11 border rounded-lg bg-background text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
-                      errors.password ? "border-danger focus:ring-danger" : "border-border focus:ring-primary"
-                    }`}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handleChange("password")}
-                    aria-invalid={Boolean(errors.password)}
-                    aria-describedby={errors.password ? "password-error" : undefined}
-                  />
                   <button
-                    type="button"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
-                    onClick={() => setShowPassword(!showPassword)}
+                    type="submit"
+                    disabled={isSendingOtp}
+                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover active:bg-primary-hover text-white font-semibold py-2.5 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {isSendingOtp && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isSendingOtp ? "Sending OTP..." : "Send OTP"}
                   </button>
+                </form>
+              </>
+            )}
+
+            {step === "otp" && (
+              <>
+                <button
+                  onClick={backToPhoneStep}
+                  className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors mb-4"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Change number
+                </button>
+
+                <div className="text-center mb-8">
+                  <h1 className="text-2xl font-bold text-foreground">Enter Code</h1>
+                  <p className="text-sm text-muted mt-1">We sent a 6-digit code to {phone}</p>
                 </div>
-                {errors.password && (
-                  <p id="password-error" className="mt-1.5 text-xs text-danger">
-                    {errors.password}
-                  </p>
-                )}
-              </div>
 
-              <div className="flex items-center -mt-1">
-                <label className="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
-                  />
-                  Remember me
-                </label>
-              </div>
+                <form onSubmit={handleVerifyOtp} noValidate className="space-y-5">
+                  {errors.otp && (
+                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-danger/10 text-danger text-sm">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{errors.otp}</span>
+                    </div>
+                  )}
 
-              <button
-                type="submit"
-                disabled={isLoggingIn}
-                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover active:bg-primary-hover text-white font-semibold py-2.5 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {isLoggingIn && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isLoggingIn ? "Signing in..." : "Sign In"}
-              </button>
-            </form>
+                  <div>
+                    <label htmlFor="otp" className="block text-sm font-medium text-foreground mb-1.5">
+                      Verification Code
+                    </label>
+                    <input
+                      id="otp"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      autoComplete="one-time-code"
+                      className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-background text-foreground placeholder-muted tracking-[0.3em] text-center text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                      placeholder="000000"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    />
+                  </div>
 
-            <p className="mt-6 text-center text-sm text-muted">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:text-primary-hover font-semibold transition-colors">
-                Sign up
-              </Link>
-            </p>
+                  <button
+                    type="submit"
+                    disabled={isVerifyingOtp}
+                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover active:bg-primary-hover text-white font-semibold py-2.5 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isVerifyingOtp && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isVerifyingOtp ? "Verifying..." : "Verify"}
+                  </button>
+
+                  {resendIn > 0 ? (
+                    <p className="w-full text-center text-sm text-muted">
+                      Resend code in <span className="font-medium text-foreground">{resendIn}s</span>
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={isSendingOtp}
+                      className="w-full text-center text-sm text-primary hover:text-primary-hover font-semibold transition-colors disabled:opacity-60"
+                    >
+                      {isSendingOtp ? "Resending..." : "Resend code"}
+                    </button>
+                  )}
+                </form>
+              </>
+            )}
+
+            {step === "name" && (
+              <>
+                <div className="text-center mb-8">
+                  <h1 className="text-2xl font-bold text-foreground">Almost There</h1>
+                  <p className="text-sm text-muted mt-1">Tell us your name to finish creating your account</p>
+                </div>
+
+                <form onSubmit={handleCompleteSignup} noValidate className="space-y-5">
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-1.5">
+                      Full Name
+                    </label>
+                    <input
+                      id="fullName"
+                      type="text"
+                      autoComplete="name"
+                      className={`w-full px-3.5 py-2.5 border rounded-lg bg-background text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                        errors.fullName ? "border-danger focus:ring-danger" : "border-border focus:ring-primary"
+                      }`}
+                      placeholder="Enter your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
+                    {errors.fullName && (
+                      <p className="mt-1.5 text-xs text-danger">{errors.fullName}</p>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isVerifyingOtp}
+                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover active:bg-primary-hover text-white font-semibold py-2.5 px-4 rounded-lg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isVerifyingOtp && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isVerifyingOtp ? "Creating account..." : "Continue"}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
 
           <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted">

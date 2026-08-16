@@ -5,7 +5,6 @@ import { useThemeStore } from './store/useThemeStore'
 import { useEffect } from 'react'
 
 import LoginPage from './pages/LoginPage'
-import SignUpPage from './pages/SignUpPage'
 import HomePage from './pages/HomePage'
 import SettingsPage from './pages/SettingsPage'
 import ProfilePage from './pages/ProfilePage'
@@ -52,7 +51,7 @@ function App() {
         <Routes>
           <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
           <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
-          <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+          <Route path="/signup" element={<Navigate to="/login" replace />} />
           <Route path="/settings" element={authUser ? <SettingsPage /> : <Navigate to="/login" />} />
           <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
         </Routes>

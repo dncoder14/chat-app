@@ -7,7 +7,7 @@ export const addContact = async (req, res) => {
 
         const contact = await prisma.user.findUnique({ 
             where: { phone },
-            select: { id: true, fullName: true, email: true, phone: true, profilePic: true }
+            select: { id: true, fullName: true, phone: true, profilePic: true }
         });
         if (!contact) {
             return res.status(404).json({ message: "User not found" });
@@ -43,7 +43,7 @@ export const getContacts = async (req, res) => {
         const contactIds = Array.isArray(user.contacts) ? user.contacts : [];
         const contacts = contactIds.length > 0 ? await prisma.user.findMany({
             where: { id: { in: contactIds } },
-            select: { id: true, fullName: true, email: true, phone: true, profilePic: true }
+            select: { id: true, fullName: true, phone: true, profilePic: true }
         }) : [];
         res.status(200).json(contacts);
     } catch (error) {
@@ -99,7 +99,7 @@ export const getBlockedUsers = async (req, res) => {
         const blockedUserIds = Array.isArray(user.blockedUsers) ? user.blockedUsers : [];
         const blockedUsers = blockedUserIds.length > 0 ? await prisma.user.findMany({
             where: { id: { in: blockedUserIds } },
-            select: { id: true, fullName: true, email: true, phone: true, profilePic: true }
+            select: { id: true, fullName: true, phone: true, profilePic: true }
         }) : [];
         res.status(200).json(blockedUsers);
     } catch (error) {

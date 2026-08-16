@@ -1,108 +1,89 @@
 import { generateToken } from "../lib/utils.js";
 import { prisma } from "../lib/prisma.js";
-import bcrypt from "bcryptjs";
+import { consumeOtp, generateAndStoreOtp, OtpCooldownError, verifyOtp as checkOtp } from "../lib/otpStore.js";
 import { cloudinary } from "../lib/cloudinary.js";
 
-export const signup = async (req, res) => {
-    const { fullName, email, phone, password } = req.body;
+const E164_REGEX = /^\+[1-9]\d{6,14}$/;
+
+// Generates and "sends" an OTP for a phone number. There's no real SMS
+// vendor wired in yet, so the OTP is echoed back in the response (dev only)
+// for the frontend to display directly. Swap this for a real vendor call
+// (e.g. 2Factor) later and drop the `otp` field from the response.
+export const sendOtp = async (req, res) => {
+    const { phone } = req.body;
     try {
-        if (!fullName || !email || !phone || !password) {
-            return res.status(400).json({ message: "All fields are required" });
+        if (!phone || !E164_REGEX.test(phone)) {
+            return res.status(400).json({ message: "A valid phone number is required" });
         }
 
-        if (password.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters" });
-        }
+        const otp = await generateAndStoreOtp(phone);
 
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: "Invalid email format" });
-        }
-
-        // Phone validation
-        const cleanPhone = phone.replace(/\s/g, '');
-        if (cleanPhone.length !== 10 || !/^[0-9]{10}$/.test(cleanPhone)) {
-            return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
-        }
-
-        const existingUser = await prisma.user.findFirst({
-            where: {
-                OR: [{ email }, { phone }]
-            }
-        });
-        if (existingUser) {
-            return res.status(400).json({ message: "Email or phone already exists" });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await prisma.user.create({
-            data: {
-                fullName,
-                email,
-                phone,
-                password: hashedPassword
-            }
-        });
-
-        const token = generateToken(newUser.id, res);
-
-        res.status(201).json({
-            _id: newUser.id,
-            fullName: newUser.fullName,
-            email: newUser.email,
-            phone: newUser.phone,
-            profilePic: newUser.profilePic,
-            token
+        res.status(200).json({
+            message: "OTP sent",
+            ...(process.env.NODE_ENV !== "production" && { otp }),
         });
     } catch (error) {
-        console.log("Error in signup controller", error.message);
+        if (error instanceof OtpCooldownError) {
+            return res.status(429).json({ message: error.message });
+        }
+        console.log("Error in sendOtp controller", error.message);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
-export const login = async (req, res) => {
-    const { email, password, remember } = req.body;
+export const verifyOtp = async (req, res) => {
+    const { phone, otp, fullName } = req.body;
     try {
-        if (!email || !password) {
-            return res.status(400).json({ message: "All fields are required" });
+        if (!phone || !otp) {
+            return res.status(400).json({ message: "Phone and OTP are required" });
         }
 
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return res.status(400).json({ message: "Invalid credentials" });
+        if (!(await checkOtp(phone, otp))) {
+            return res.status(400).json({ message: "Invalid or expired OTP" });
+        }
 
-        const isPasswordCorrect = await bcrypt.compare(password, user.password);
-        if (!isPasswordCorrect) return res.status(400).json({ message: "Invalid credentials" });
+        let user = await prisma.user.findUnique({ where: { phone } });
+
+        if (!user) {
+            if (!fullName || !fullName.trim()) {
+                return res.status(200).json({ newUser: true });
+            }
+
+            user = await prisma.user.create({
+                data: { phone, fullName: fullName.trim() },
+            });
+        }
+
+        await consumeOtp(phone);
 
         await prisma.user.update({
             where: { id: user.id },
-            data: { isOnline: true }
+            data: { isOnline: true },
         });
-        const token = generateToken(user.id, res, remember !== false);
+
+        const token = generateToken(user.id, res);
 
         res.status(200).json({
             _id: user.id,
             fullName: user.fullName,
-            email: user.email,
             phone: user.phone,
             profilePic: user.profilePic,
-            token
+            token,
         });
-
     } catch (error) {
-        console.log("Error in login controller", error.message);
+        console.log("Error in verifyOtp controller", error.message);
         res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};
 
 export const logout = async (req, res) => {
     try {
         if (req.user?.id) {
             await prisma.user.update({
                 where: { id: req.user.id },
-                data: { 
-                    isOnline: false, 
-                    lastSeen: new Date() 
+                data: {
+                    isOnline: false,
+                    lastSeen: new Date()
                 }
             });
         }
@@ -129,7 +110,6 @@ export const updateProfile = async (req, res) => {
             select: {
                 id: true,
                 fullName: true,
-                email: true,
                 phone: true,
                 profilePic: true
             }

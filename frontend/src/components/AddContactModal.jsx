@@ -1,22 +1,24 @@
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 import { axiosInstance } from "../lib/axios";
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
 import Modal from "./ui/Modal";
 
 const AddContactModal = ({ onClose }) => {
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState();
   const [isLoading, setIsLoading] = useState(false);
   const { getUsers } = useChatStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!phone.trim()) return;
+    if (!phone || !isValidPhoneNumber(phone)) return;
 
     setIsLoading(true);
     try {
-      await axiosInstance.post("/contacts/add", { phone: phone.trim() });
+      await axiosInstance.post("/contacts/add", { phone });
       toast.success("Contact added successfully");
       getUsers();
       onClose();
@@ -34,14 +36,14 @@ const AddContactModal = ({ onClose }) => {
           <label htmlFor="contact-phone" className="block text-sm font-medium text-foreground mb-1.5">
             Phone Number
           </label>
-          <input
+          <PhoneInput
             id="contact-phone"
-            type="tel"
-            className="w-full px-3.5 py-2.5 border border-border rounded-lg bg-background text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-            placeholder="Enter phone number"
+            international
+            defaultCountry="IN"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
+            onChange={setPhone}
+            placeholder="Enter phone number"
+            className="phone-input-field"
           />
         </div>
 
@@ -55,7 +57,7 @@ const AddContactModal = ({ onClose }) => {
           </button>
           <button
             type="submit"
-            disabled={isLoading || !phone.trim()}
+            disabled={isLoading || !phone || !isValidPhoneNumber(phone)}
             className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             <UserPlus className="w-4 h-4" />

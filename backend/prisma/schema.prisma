@@ -11,10 +11,8 @@ datasource db {
 
 model User {
   id           String   @id @default(cuid())
-  email        String   @unique
   fullName     String
   phone        String   @unique
-  password     String
   profilePic   String   @default("")
   isOnline     Boolean  @default(false)
   lastSeen     DateTime @default(now())
@@ -30,6 +28,17 @@ model User {
   receivedNotifications Notification[] @relation("ReceivedNotifications")
 
   @@map("users")
+}
+
+model OtpRequest {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  otpHash   String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("otp_requests")
 }
 
 model Message {

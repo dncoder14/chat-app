@@ -116,7 +116,7 @@ const SettingsPage = () => {
               </div>
 
               <h3 className="font-semibold text-foreground text-lg">{authUser?.fullName}</h3>
-              <p className="text-sm text-muted mb-4">{authUser?.email}</p>
+              <p className="text-sm text-muted mb-4">{authUser?.phone}</p>
 
               <div className="flex gap-3">
                 {authUser?.profilePic && (
