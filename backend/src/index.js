@@ -30,6 +30,19 @@ app.use(cors({
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
+// Pinged periodically (.github/workflows/keepalive.yml) to keep the
+// free-tier Render instance and DB connection from going idle. Deliberately
+// unauthenticated and outside /api to stay simple to hit externally.
+app.get("/health", async (req, res) => {
+    try {
+        await prisma.$queryRaw`SELECT 1`;
+        res.status(200).json({ status: "ok", db: "connected", timestamp: new Date().toISOString() });
+    } catch (error) {
+        console.error("Health check DB query failed:", error.message);
+        res.status(503).json({ status: "error", db: "disconnected", timestamp: new Date().toISOString() });
+    }
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/contacts", contactRoutes);
