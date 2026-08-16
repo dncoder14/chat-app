@@ -1,6 +1,4 @@
-import StatusIndicator from "./ui/StatusIndicator";
-
-const Avatar = ({ src, name, size = "w-10 h-10", className = "", online }) => {
+const Avatar = ({ src, name, size = "w-10 h-10", className = "" }) => {
   const getInitials = (fullName) => {
     if (!fullName) return "U";
     const names = fullName.trim().split(" ").filter(Boolean);
@@ -25,7 +23,6 @@ const Avatar = ({ src, name, size = "w-10 h-10", className = "", online }) => {
           {getInitials(name)}
         </span>
       )}
-      {typeof online !== "undefined" && <StatusIndicator online={online} />}
     </span>
   );
 };

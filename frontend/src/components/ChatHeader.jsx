@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useBlockStore } from "../store/useBlockStore";
-import { ArrowLeft, MoreVertical, Shield, ShieldOff } from "lucide-react";
+import { ArrowLeft, MoreVertical, Shield, ShieldOff, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Avatar from "./Avatar";
 import IconButton from "./ui/IconButton";
@@ -21,6 +21,19 @@ const ChatHeader = () => {
   useEffect(() => {
     fetchBlockedUsers();
   }, [selectedUser, fetchBlockedUsers]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key !== "Escape") return;
+      if (showMenu) {
+        setShowMenu(false);
+      } else {
+        setSelectedUser(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showMenu, setSelectedUser]);
 
   const toggleBlock = async () => {
     setIsBlocking(true);
@@ -54,7 +67,6 @@ const ChatHeader = () => {
             src={selectedUser.profilePic}
             name={selectedUser.fullName}
             size="w-10 h-10"
-            online={isOnline}
           />
           <div className="ml-3 min-w-0">
             <p className="font-semibold text-foreground truncate leading-tight">{selectedUser.fullName}</p>
@@ -65,11 +77,16 @@ const ChatHeader = () => {
           </div>
         </div>
 
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 flex items-center gap-1">
           <IconButton
             icon={MoreVertical}
             label="More options"
             onClick={() => setShowMenu(!showMenu)}
+          />
+          <IconButton
+            icon={X}
+            label="Close chat"
+            onClick={() => setSelectedUser(null)}
           />
 
           {showMenu && (

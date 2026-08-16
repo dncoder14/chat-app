@@ -20,7 +20,7 @@ const AddContactModal = ({ onClose }) => {
     try {
       await axiosInstance.post("/contacts/add", { phone });
       toast.success("Contact added successfully");
-      getUsers();
+      getUsers(true);
       onClose();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to add contact");

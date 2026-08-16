@@ -135,11 +135,11 @@ export const useAuthStore = create((set, get) => ({
           // If message is from selected user (chat is open), delay refresh to allow auto-read
           if (selectedUserId && senderId === selectedUserId && newMessage.receiverId === authUserId) {
             setTimeout(() => {
-              useChatStore.getState().getUsers();
+              useChatStore.getState().getUsers(true);
             }, 700);
           } else {
             // Immediate refresh for other cases
-            useChatStore.getState().getUsers();
+            useChatStore.getState().getUsers(true);
           }
         });
       }

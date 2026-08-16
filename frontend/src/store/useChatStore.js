@@ -11,8 +11,11 @@ export const useChatStore = create((set, get) => ({
   isMessagesLoading: false,
   typingUsers: {},
 
-  getUsers: async () => {
-    set({ isUsersLoading: true });
+  // `silent` skips the loading flag for background refreshes (new message
+  // arriving, contact added, etc.) so the sidebar updates in place instead
+  // of flashing back to the full skeleton screen every time.
+  getUsers: async (silent = false) => {
+    if (!silent) set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
       set({ users: res.data, isUsersLoading: false });
@@ -36,19 +39,38 @@ export const useChatStore = create((set, get) => ({
 
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
+    const receiverId = selectedUser._id || selectedUser.id;
+    const authUser = useAuthStore.getState().authUser;
+    const authUserId = authUser._id || authUser.id;
+
+    // Show the message immediately with a pending status (see MessageStatus)
+    // rather than waiting for the round trip, since that's especially slow
+    // and jarring for image uploads.
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const optimisticMessage = {
+      id: tempId,
+      senderId: authUserId,
+      receiverId,
+      text: messageData.text || null,
+      image: messageData.image || null,
+      isDelivered: false,
+      isRead: false,
+      pending: true,
+      createdAt: new Date().toISOString(),
+    };
+    set({ messages: [...messages, optimisticMessage] });
+
     try {
-      const res = await axiosInstance.post(`/messages/send/${selectedUser._id || selectedUser.id}`, messageData);
-      set({ messages: [...messages, res.data] });
-      
-      // Force scroll to bottom after sending
-      setTimeout(() => {
-        const messageContainer = document.querySelector('.message-container');
-        if (messageContainer) {
-          messageContainer.scrollTop = messageContainer.scrollHeight;
-        }
-      }, 100);
+      const res = await axiosInstance.post(`/messages/send/${receiverId}`, messageData);
+      set({ messages: get().messages.map((m) => (m.id === tempId ? res.data : m)) });
+      // The backend only pushes newMessage/newMessage_chat socket events to
+      // the receiver, so the sender needs to refresh their own sidebar here
+      // to see their outgoing message reflected as the latest.
+      get().getUsers(true);
     } catch (error) {
+      set({ messages: get().messages.filter((m) => m.id !== tempId) });
       toast.error(error.response?.data?.error || "Failed to send message");
+      throw error;
     }
   },
 
@@ -106,11 +128,6 @@ export const useChatStore = create((set, get) => ({
             }
           }, 500);
         }
-      }
-      
-      // Only refresh sidebar for sent messages (received messages are handled by global listener)
-      if (senderId === authUserId) {
-        get().getUsers();
       }
     });
 

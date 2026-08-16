@@ -1,5 +1,4 @@
 import { useChatStore } from "../store/useChatStore";
-import { useAuthStore } from "../store/useAuthStore";
 import { axiosInstance } from "../lib/axios";
 import { Users } from "lucide-react";
 import ConversationItem from "./ui/ConversationItem";
@@ -7,7 +6,6 @@ import EmptyState from "./ui/EmptyState";
 
 const ContactList = ({ users, selectedUser }) => {
   const { setSelectedUser, getUsers } = useChatStore();
-  const { onlineUsers } = useAuthStore();
 
   const handleUserSelect = async (user) => {
     setSelectedUser(user);
@@ -16,7 +14,7 @@ const ContactList = ({ users, selectedUser }) => {
     try {
       await axiosInstance.put(`/messages/read/${user._id || user.id}`);
       // Refresh users to sync with backend
-      getUsers();
+      getUsers(true);
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
@@ -39,7 +37,6 @@ const ContactList = ({ users, selectedUser }) => {
           key={user._id || user.id}
           user={user}
           isSelected={(selectedUser?._id || selectedUser?.id) === (user._id || user.id)}
-          isOnline={onlineUsers.includes(user._id || user.id)}
           onSelect={handleUserSelect}
         />
       ))}

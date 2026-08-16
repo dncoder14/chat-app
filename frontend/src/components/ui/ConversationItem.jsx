@@ -1,7 +1,7 @@
 import Avatar from "../Avatar";
 import { formatMessageTime } from "../../lib/utils";
 
-const ConversationItem = ({ user, isSelected, isOnline, onSelect }) => {
+const ConversationItem = ({ user, isSelected, onSelect }) => {
   const hasUnread = user.unreadCount > 0;
   const preview = user.lastMessage?.text
     ? user.lastMessage.text
@@ -18,7 +18,7 @@ const ConversationItem = ({ user, isSelected, isOnline, onSelect }) => {
           : "hover:bg-surface-secondary"
       }`}
     >
-      <Avatar src={user.profilePic} name={user.fullName} size="w-12 h-12" online={isOnline} />
+      <Avatar src={user.profilePic} name={user.fullName} size="w-12 h-12" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <p

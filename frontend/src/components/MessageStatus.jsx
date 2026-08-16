@@ -1,4 +1,4 @@
-import { Check, CheckCheck } from "lucide-react";
+import { Check, CheckCheck, Clock } from "lucide-react";
 
 const MessageStatus = ({ message, authUser }) => {
   // Only show status for messages sent by current user
@@ -6,7 +6,9 @@ const MessageStatus = ({ message, authUser }) => {
 
   return (
     <div className="flex items-center">
-      {message.isRead ? (
+      {message.pending ? (
+        <Clock className="w-3 h-3 text-white/70 animate-pulse" />
+      ) : message.isRead ? (
         <CheckCheck className="w-3.5 h-3.5 text-sky-200" />
       ) : message.isDelivered ? (
         <Check className="w-3.5 h-3.5 text-white/70" />

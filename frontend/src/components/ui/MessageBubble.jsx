@@ -16,7 +16,7 @@ const MessageBubble = ({ message, isOwn, authUser, otherUser, grouped, groupEnd 
     <div
       className={`flex items-end gap-2 ${isOwn ? "justify-end" : "justify-start"} ${
         grouped ? "mt-0.5" : "mt-4"
-      } message-animation`}
+      } ${message.pending ? "opacity-60" : ""} message-animation`}
     >
       {!isOwn &&
         (groupEnd ? (
